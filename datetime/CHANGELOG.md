@@ -5,6 +5,7 @@ All notable changes to the Datetime module will be documented in this file.
 ## [0.0.1] - 2025-01-17
 
 ### Added
+
 - Initial release of the Datetime module
 - `DateTime` class for date/time manipulation
 - Core functions: `now()`, `today()`, `utcNow()`

@@ -209,6 +209,31 @@ class Duration
     func isNegative()
         return self._ms < 0
     endfunc
+
+    # -------------------------------------------------------------------------
+    # Static Methods (called as Duration.methodName())
+    # -------------------------------------------------------------------------
+
+    # Create duration from components
+    static func fromComponents(days, hours, minutes, seconds, milliseconds)
+        if days == None
+            days = 0
+        endif
+        if hours == None
+            hours = 0
+        endif
+        if minutes == None
+            minutes = 0
+        endif
+        if seconds == None
+            seconds = 0
+        endif
+        if milliseconds == None
+            milliseconds = 0
+        endif
+        ms = (days * 86400000) + (hours * 3600000) + (minutes * 60000) + (seconds * 1000) + milliseconds
+        return new Duration(ms)
+    endfunc
 endclass
 
 # -----------------------------------------------------------------------------
@@ -655,205 +680,275 @@ class DateTime
     func toString()
         return self.format(FORMAT_DATETIME)
     endfunc
+
+    # -------------------------------------------------------------------------
+    # Static Methods (called as DateTime.methodName())
+    # -------------------------------------------------------------------------
+
+    # Get current local datetime
+    static func now()
+        return new DateTime()
+    endfunc
+
+    # Get current UTC datetime
+    static func utcNow()
+        dt = new DateTime()
+        dt._year = _utc_year()
+        dt._month = _utc_month()
+        dt._day = _utc_day()
+        dt._hour = _utc_hour()
+        dt._minute = _utc_minute()
+        dt._second = _utc_second()
+        dt._millisecond = 0
+        dt._tz = "UTC"
+        return dt
+    endfunc
+
+    # Get today at midnight
+    static func today()
+        dt = new DateTime()
+        dt._hour = 0
+        dt._minute = 0
+        dt._second = 0
+        dt._millisecond = 0
+        return dt
+    endfunc
+
+    # Get current timestamp in milliseconds
+    static func timestamp()
+        return _timestamp()
+    endfunc
+
+    # Create datetime from timestamp (milliseconds)
+    static func fromTimestamp(ts)
+        dt = new DateTime()
+        dt._year = _ts_to_year(ts)
+        dt._month = _ts_to_month(ts)
+        dt._day = _ts_to_day(ts)
+        dt._hour = _ts_to_hour(ts)
+        dt._minute = _ts_to_minute(ts)
+        dt._second = _ts_to_second(ts)
+        dt._millisecond = ts % 1000
+        return dt
+    endfunc
+
+    # Create datetime from Unix timestamp (seconds)
+    static func fromUnix(unix)
+        return DateTime.fromTimestamp(unix * 1000)
+    endfunc
+
+    # Parse datetime from string
+    static func parse(str, format)
+        dt = new DateTime(1970, 1, 1, 0, 0, 0, 0)
+
+        if format == None
+            format = FORMAT_DATETIME
+        endif
+
+        # Try to parse ISO format first
+        if contains(str, "T") and (contains(str, "Z") or contains(str, "+") or contains(str, "-"))
+            return DateTime.parseIso(str)
+        endif
+
+        # Parse based on format
+        i = 0
+        fi = 0
+
+        while fi < len(format) and i < len(str)
+            if format[fi] == "%"
+                fi = fi + 1
+                spec = format[fi]
+
+                if spec == "Y"
+                    dt._year = parseInt(slice(str, i, i + 4))
+                    i = i + 4
+                elif spec == "y"
+                    year2 = parseInt(slice(str, i, i + 2))
+                    dt._year = year2 >= 70 ? 1900 + year2 : 2000 + year2
+                    i = i + 2
+                elif spec == "m"
+                    dt._month = parseInt(slice(str, i, i + 2))
+                    i = i + 2
+                elif spec == "d"
+                    dt._day = parseInt(slice(str, i, i + 2))
+                    i = i + 2
+                elif spec == "H"
+                    dt._hour = parseInt(slice(str, i, i + 2))
+                    i = i + 2
+                elif spec == "M"
+                    dt._minute = parseInt(slice(str, i, i + 2))
+                    i = i + 2
+                elif spec == "S"
+                    dt._second = parseInt(slice(str, i, i + 2))
+                    i = i + 2
+                endif
+                fi = fi + 1
+            else
+                # Skip literal characters
+                i = i + 1
+                fi = fi + 1
+            endif
+        endwhile
+
+        return dt
+    endfunc
+
+    # Parse ISO 8601 datetime string
+    static func parseIso(str)
+        # Format: YYYY-MM-DDTHH:MM:SS.sssZ or YYYY-MM-DDTHH:MM:SS.sss+HH:MM
+        dt = new DateTime(1970, 1, 1, 0, 0, 0, 0)
+
+        # Remove 'Z' suffix
+        str = replace(str, "Z", "")
+
+        # Split date and time
+        parts = split(str, "T")
+        datePart = parts[0]
+
+        # Parse date
+        dateParts = split(datePart, "-")
+        dt._year = parseInt(dateParts[0])
+        dt._month = parseInt(dateParts[1])
+        dt._day = parseInt(dateParts[2])
+
+        # Parse time if present
+        if len(parts) > 1
+            timePart = parts[1]
+
+            # Check for timezone offset
+            if contains(timePart, "+")
+                timeParts = split(timePart, "+")
+                timePart = timeParts[0]
+            elif contains(timePart, "-")
+                # Could be negative offset - need to handle carefully
+                lastDash = _lastIndexOf(timePart, "-")
+                if lastDash > 5
+                    timePart = slice(timePart, 0, lastDash)
+                endif
+            endif
+
+            # Parse time components
+            timeComponents = split(timePart, ":")
+            dt._hour = parseInt(timeComponents[0])
+            if len(timeComponents) > 1
+                dt._minute = parseInt(timeComponents[1])
+            endif
+            if len(timeComponents) > 2
+                secondPart = timeComponents[2]
+                # Handle milliseconds
+                if contains(secondPart, ".")
+                    secParts = split(secondPart, ".")
+                    dt._second = parseInt(secParts[0])
+                    dt._millisecond = parseInt(secParts[1])
+                else
+                    dt._second = parseInt(secondPart)
+                endif
+            endif
+        endif
+
+        return dt
+    endfunc
+
+    # Check if year is leap year
+    static func isLeapYear(year)
+        return (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+    endfunc
+
+    # Get days in month
+    static func daysInMonth(year, month)
+        days = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        if month == 2 and DateTime.isLeapYear(year)
+            return 29
+        endif
+        return days[month]
+    endfunc
+
+    # Sleep for specified duration
+    static func sleep(duration)
+        if type(duration) == "number"
+            _sleep_ms(duration)
+        else
+            _sleep_ms(duration.milliseconds())
+        endif
+    endfunc
+
+    # Sleep for seconds
+    static func sleepSeconds(seconds)
+        _sleep_ms(seconds * 1000)
+    endfunc
 endclass
 
 # -----------------------------------------------------------------------------
 # Module Functions
 # -----------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------
+# DateTime Class Static Methods (Module-level functions that delegate to class)
+# -----------------------------------------------------------------------------
+
 # Get current local datetime
 func now()
-    return new DateTime()
+    return DateTime.now()
 endfunc
 
 # Get current UTC datetime
 func utcNow()
-    dt = new DateTime()
-    dt._year = _utc_year()
-    dt._month = _utc_month()
-    dt._day = _utc_day()
-    dt._hour = _utc_hour()
-    dt._minute = _utc_minute()
-    dt._second = _utc_second()
-    dt._millisecond = 0
-    dt._tz = "UTC"
-    return dt
+    return DateTime.utcNow()
 endfunc
 
 # Get today at midnight
 func today()
-    dt = new DateTime()
-    dt._hour = 0
-    dt._minute = 0
-    dt._second = 0
-    dt._millisecond = 0
-    return dt
+    return DateTime.today()
 endfunc
 
 # Get current timestamp in milliseconds
 func timestamp()
-    return _timestamp()
+    return DateTime.timestamp()
 endfunc
 
 # Create datetime from timestamp (milliseconds)
 func fromTimestamp(ts)
-    dt = new DateTime()
-    dt.fromTimestamp(ts)
-    return dt
+    return DateTime.fromTimestamp(ts)
 endfunc
 
 # Create datetime from Unix timestamp (seconds)
 func fromUnix(unix)
-    return fromTimestamp(unix * 1000)
+    return DateTime.fromUnix(unix)
 endfunc
 
 # Parse datetime from string
 func parse(str, format)
-    dt = new DateTime(1970, 1, 1, 0, 0, 0, 0)
-
-    if format == None
-        format = FORMAT_DATETIME
-    endif
-
-    # Simple parsing - extract values based on format position
-    # This is a basic implementation - a full parser would be more complex
-
-    # Try to parse ISO format first
-    if contains(str, "T") and (contains(str, "Z") or contains(str, "+") or contains(str, "-"))
-        return parseIso(str)
-    endif
-
-    # Parse based on format
-    i = 0
-    fi = 0
-
-    while fi < len(format) and i < len(str)
-        if format[fi] == "%"
-            fi = fi + 1
-            spec = format[fi]
-
-            if spec == "Y"
-                dt._year = parseInt(slice(str, i, i + 4))
-                i = i + 4
-            elif spec == "y"
-                year2 = parseInt(slice(str, i, i + 2))
-                dt._year = year2 >= 70 ? 1900 + year2 : 2000 + year2
-                i = i + 2
-            elif spec == "m"
-                dt._month = parseInt(slice(str, i, i + 2))
-                i = i + 2
-            elif spec == "d"
-                dt._day = parseInt(slice(str, i, i + 2))
-                i = i + 2
-            elif spec == "H"
-                dt._hour = parseInt(slice(str, i, i + 2))
-                i = i + 2
-            elif spec == "M"
-                dt._minute = parseInt(slice(str, i, i + 2))
-                i = i + 2
-            elif spec == "S"
-                dt._second = parseInt(slice(str, i, i + 2))
-                i = i + 2
-            endif
-            fi = fi + 1
-        else
-            # Skip literal characters
-            i = i + 1
-            fi = fi + 1
-        endif
-    endwhile
-
-    return dt
+    return DateTime.parse(str, format)
 endfunc
 
 # Parse ISO 8601 datetime string
 func parseIso(str)
-    # Format: YYYY-MM-DDTHH:MM:SS.sssZ or YYYY-MM-DDTHH:MM:SS.sss+HH:MM
-    dt = new DateTime(1970, 1, 1, 0, 0, 0, 0)
-
-    # Remove 'Z' suffix
-    str = replace(str, "Z", "")
-
-    # Split date and time
-    parts = split(str, "T")
-    datePart = parts[0]
-
-    # Parse date
-    dateParts = split(datePart, "-")
-    dt._year = parseInt(dateParts[0])
-    dt._month = parseInt(dateParts[1])
-    dt._day = parseInt(dateParts[2])
-
-    # Parse time if present
-    if len(parts) > 1
-        timePart = parts[1]
-
-        # Check for timezone offset
-        if contains(timePart, "+")
-            timeParts = split(timePart, "+")
-            timePart = timeParts[0]
-        elif contains(timePart, "-")
-            # Could be negative offset - need to handle carefully
-            lastDash = lastIndexOf(timePart, "-")
-            if lastDash > 5
-                timePart = slice(timePart, 0, lastDash)
-            endif
-        endif
-
-        # Parse time components
-        timeComponents = split(timePart, ":")
-        dt._hour = parseInt(timeComponents[0])
-        if len(timeComponents) > 1
-            dt._minute = parseInt(timeComponents[1])
-        endif
-        if len(timeComponents) > 2
-            secondPart = timeComponents[2]
-            # Handle milliseconds
-            if contains(secondPart, ".")
-                secParts = split(secondPart, ".")
-                dt._second = parseInt(secParts[0])
-                dt._millisecond = parseInt(secParts[1])
-            else
-                dt._second = parseInt(secondPart)
-            endif
-        endif
-    endif
-
-    return dt
+    return DateTime.parseIso(str)
 endfunc
 
 # Check if year is leap year
 func isLeapYear(year)
-    return (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+    return DateTime.isLeapYear(year)
 endfunc
 
 # Get days in month
 func daysInMonth(year, month)
-    days = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    if month == 2 and isLeapYear(year)
-        return 29
-    endif
-    return days[month]
+    return DateTime.daysInMonth(year, month)
 endfunc
 
 # Sleep for specified duration
 func sleep(duration)
-    if type(duration) == "number"
-        _sleep_ms(duration)
-    else
-        _sleep_ms(duration.milliseconds())
-    endif
+    DateTime.sleep(duration)
 endfunc
 
 # Sleep for seconds
 func sleepSeconds(seconds)
-    _sleep_ms(seconds * 1000)
+    DateTime.sleepSeconds(seconds)
 endfunc
 
 # Create duration from components
 func duration(days, hours, minutes, seconds, milliseconds)
-    dur = new Duration(0)
-    return dur.fromComponents(days, hours, minutes, seconds, milliseconds)
+    return Duration.fromComponents(days, hours, minutes, seconds, milliseconds)
 endfunc
 
 # -----------------------------------------------------------------------------
@@ -915,7 +1010,7 @@ func max(a, b)
 endfunc
 
 # Last index of substring
-func lastIndexOf(str, substr)
+func _lastIndexOf(str, substr)
     lastPos = -1
     pos = 0
     while True
@@ -929,4 +1024,4 @@ func lastIndexOf(str, substr)
     return lastPos
 endfunc
 
-print "DateTime module loaded"
+print "DateTime module loaded (v0.0.1)"

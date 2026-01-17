@@ -4,7 +4,7 @@ Cross-platform date and time module for Oxide. Parse, format, and manipulate dat
 
 ## Overview
 
-The datetime module provides a comprehensive API for working with dates and times in Oxide applications. It offers both functional and object-oriented interfaces.
+The datetime module provides a comprehensive API for working with dates and times in Oxide applications. It offers class-based static methods for cleaner, more organized code.
 
 ## Installation
 
@@ -17,17 +17,17 @@ oxide install datetime
 ```oxide
 use datetime
 
-# Get current date/time
-dt = now()
+# Get current date/time using static methods
+dt = DateTime.now()
 print dt.format("%Y-%m-%d %H:%M:%S")
 
 # Parse a date string
-birthday = parse("1990-05-15", "%Y-%m-%d")
+birthday = DateTime.parse("1990-05-15", "%Y-%m-%d")
 print birthday.year()  # 1990
 
 # Date arithmetic
-tomorrow = today().addDays(1)
-nextWeek = today().addDays(7)
+tomorrow = DateTime.today().addDays(1)
+nextWeek = DateTime.today().addDays(7)
 ```
 
 ## Usage Examples
@@ -38,15 +38,15 @@ nextWeek = today().addDays(7)
 use datetime
 
 # Current local time
-current = now()
+current = DateTime.now()
 print "Now: " + current.format("%Y-%m-%d %H:%M:%S")
 
 # Current UTC time
-utc = utcNow()
+utc = DateTime.utcNow()
 print "UTC: " + utc.toIso()
 
 # Today's date (midnight)
-date = today()
+date = DateTime.today()
 print "Today: " + date.format("%Y-%m-%d")
 ```
 
@@ -60,16 +60,16 @@ dt = new DateTime(2024, 12, 25, 10, 30, 0)
 print dt.format("%B %d, %Y")  # December 25, 2024
 
 # From timestamp (milliseconds)
-dt = fromTimestamp(1703505600000)
+dt = DateTime.fromTimestamp(1703505600000)
 
 # From Unix timestamp (seconds)
-dt = fromUnix(1703505600)
+dt = DateTime.fromUnix(1703505600)
 
 # From ISO string
-dt = parseIso("2024-12-25T10:30:00Z")
+dt = DateTime.parseIso("2024-12-25T10:30:00Z")
 
 # From custom format
-dt = parse("25/12/2024", "%d/%m/%Y")
+dt = DateTime.parse("25/12/2024", "%d/%m/%Y")
 ```
 
 ### Formatting Dates
@@ -77,7 +77,7 @@ dt = parse("25/12/2024", "%d/%m/%Y")
 ```oxide
 use datetime
 
-dt = now()
+dt = DateTime.now()
 
 # Common formats
 print dt.format("%Y-%m-%d")        # 2024-01-17
@@ -123,7 +123,7 @@ print dt.format(FORMAT_DATETIME)   # 2024-01-17 14:30:45
 ```oxide
 use datetime
 
-dt = now()
+dt = DateTime.now()
 
 # Date components
 print dt.year()         # 2024
@@ -151,7 +151,7 @@ print dt.isToday()      # True/False
 ```oxide
 use datetime
 
-dt = now()
+dt = DateTime.now()
 
 # Add time
 tomorrow = dt.addDays(1)
@@ -182,8 +182,8 @@ startOfYear = dt.startOfYear()
 ```oxide
 use datetime
 
-date1 = parse("2024-01-15", "%Y-%m-%d")
-date2 = parse("2024-01-20", "%Y-%m-%d")
+date1 = DateTime.parse("2024-01-15", "%Y-%m-%d")
+date2 = DateTime.parse("2024-01-20", "%Y-%m-%d")
 
 # Comparisons
 print date1.isBefore(date2)   # True
@@ -197,7 +197,7 @@ print diff.hours              # -120
 print diff.totalSeconds       # -432000
 
 # Between check
-middle = parse("2024-01-17", "%Y-%m-%d")
+middle = DateTime.parse("2024-01-17", "%Y-%m-%d")
 print middle.isBetween(date1, date2)  # True
 ```
 
@@ -206,25 +206,25 @@ print middle.isBetween(date1, date2)  # True
 ```oxide
 use datetime
 
-# Create duration
-dur = new Duration(days: 5, hours: 3, minutes: 30)
+# Create duration using static method
+dur = Duration.fromComponents(5, 3, 30, 0, 0)  # 5 days, 3 hours, 30 minutes
 
 # From difference
-start = parse("2024-01-01", "%Y-%m-%d")
-end = parse("2024-01-10", "%Y-%m-%d")
+start = DateTime.parse("2024-01-01", "%Y-%m-%d")
+end = DateTime.parse("2024-01-10", "%Y-%m-%d")
 dur = start.diff(end)
 
 # Access components
-print dur.days        # 9
-print dur.hours       # 216
-print dur.minutes     # 12960
-print dur.seconds     # 777600
+print dur.days()        # 9
+print dur.hours()       # 216
+print dur.minutes()     # 12960
+print dur.seconds()     # 777600
 
 # Human readable
 print dur.humanize()  # "9 days"
 
 # Arithmetic with duration
-future = now().add(dur)
+future = DateTime.now().add(dur)
 ```
 
 ### Timezone Support
@@ -232,7 +232,7 @@ future = now().add(dur)
 ```oxide
 use datetime
 
-dt = now()
+dt = DateTime.now()
 
 # Convert to UTC
 utc = dt.toUtc()
@@ -254,16 +254,16 @@ dt = new DateTime(2024, 1, 17, 12, 0, 0, "Europe/London")
 use datetime
 
 # Current Unix timestamp
-ts = timestamp()
+ts = DateTime.timestamp()
 print ts  # 1705505445123 (milliseconds)
 
 # Unix timestamp in seconds
-unix = now().toUnix()
+unix = DateTime.now().toUnix()
 print unix  # 1705505445
 
 # From Unix timestamp
-dt = fromUnix(1705505445)
-dt = fromTimestamp(1705505445123)
+dt = DateTime.fromUnix(1705505445)
+dt = DateTime.fromTimestamp(1705505445123)
 ```
 
 ### Relative Time
@@ -271,13 +271,13 @@ dt = fromTimestamp(1705505445123)
 ```oxide
 use datetime
 
-dt = now().addHours(-2)
+dt = DateTime.now().addHours(-2)
 print dt.fromNow()      # "2 hours ago"
 
-dt = now().addDays(3)
+dt = DateTime.now().addDays(3)
 print dt.fromNow()      # "in 3 days"
 
-dt = now().addMinutes(-5)
+dt = DateTime.now().addMinutes(-5)
 print dt.fromNow()      # "5 minutes ago"
 ```
 
@@ -286,15 +286,15 @@ print dt.fromNow()      # "5 minutes ago"
 ```oxide
 use datetime
 
-dt = now()
+dt = DateTime.now()
 
 # Days in month
-print daysInMonth(2024, 2)  # 29 (leap year)
-print daysInMonth(2023, 2)  # 28
+print DateTime.daysInMonth(2024, 2)  # 29 (leap year)
+print DateTime.daysInMonth(2023, 2)  # 28
 
 # Is leap year
-print isLeapYear(2024)      # True
-print isLeapYear(2023)      # False
+print DateTime.isLeapYear(2024)      # True
+print DateTime.isLeapYear(2023)      # False
 
 # Week number
 print dt.weekOfYear()       # 3
@@ -305,20 +305,28 @@ print dt.quarter()          # 1
 
 ## API Reference
 
-### Module Functions
+### DateTime Static Methods
 
-| Function | Description |
-|----------|-------------|
-| `now()` | Current local datetime |
-| `utcNow()` | Current UTC datetime |
-| `today()` | Today at midnight |
-| `timestamp()` | Current timestamp in ms |
-| `parse(str, format)` | Parse string to DateTime |
-| `parseIso(str)` | Parse ISO 8601 string |
-| `fromTimestamp(ms)` | Create from milliseconds |
-| `fromUnix(seconds)` | Create from Unix timestamp |
-| `isLeapYear(year)` | Check if year is leap |
-| `daysInMonth(year, month)` | Days in month |
+| Method | Description |
+|--------|-------------|
+| `DateTime.now()` | Current local datetime |
+| `DateTime.utcNow()` | Current UTC datetime |
+| `DateTime.today()` | Today at midnight |
+| `DateTime.timestamp()` | Current timestamp in ms |
+| `DateTime.parse(str, format)` | Parse string to DateTime |
+| `DateTime.parseIso(str)` | Parse ISO 8601 string |
+| `DateTime.fromTimestamp(ms)` | Create from milliseconds |
+| `DateTime.fromUnix(seconds)` | Create from Unix timestamp |
+| `DateTime.isLeapYear(year)` | Check if year is leap |
+| `DateTime.daysInMonth(year, month)` | Days in month |
+| `DateTime.sleep(duration)` | Sleep for duration |
+| `DateTime.sleepSeconds(seconds)` | Sleep for seconds |
+
+### Duration Static Methods
+
+| Method | Description |
+|--------|-------------|
+| `Duration.fromComponents(days, hours, mins, secs, ms)` | Create duration from components |
 
 ### DateTime Class
 

@@ -791,4 +791,4 @@ func createTransparent(title, width, height)
     return wv
 endfunc
 
-print "Webview module loaded (v0.0.2)"
+print "Webview module loaded (v0.0.1)"

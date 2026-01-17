@@ -18,7 +18,7 @@ oxide install zapi
 use zapi
 
 # Create a new app
-app = new App()
+app = new Zapp()
 
 # Define routes using simple method calls
 app.get("/", func(req, res)
@@ -41,7 +41,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new App()
+app = new Zapp()
 
 # GET request
 app.get("/hello", func(req, res)
@@ -72,7 +72,7 @@ app.run(8080)
 ```oxide
 use zapi
 
-app = new App()
+app = new Zapp()
 
 # Single parameter
 app.get("/users/:id", func(req, res)
@@ -94,7 +94,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new App()
+app = new Zapp()
 
 # Access query parameters
 # URL: /search?q=oxide&limit=10
@@ -112,7 +112,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new App()
+app = new Zapp()
 
 # Receive JSON body
 app.post("/api/data", func(req, res)
@@ -133,7 +133,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new App()
+app = new Zapp()
 
 app.get("/", func(req, res)
     html = "
@@ -157,7 +157,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new App()
+app = new Zapp()
 
 app.get("/old-page", func(req, res)
     res.redirect("/new-page")
@@ -175,7 +175,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new App()
+app = new Zapp()
 
 app.get("/not-found", func(req, res)
     res.status(404).text("Page not found")
@@ -197,7 +197,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new App()
+app = new Zapp()
 
 # Global middleware - runs for all routes
 app.use(func(req, res, next)
@@ -227,7 +227,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new App()
+app = new Zapp()
 
 # Serve static files from a directory
 app.static("/public", "./static")
@@ -243,7 +243,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new App()
+app = new Zapp()
 
 # Enable CORS for all routes
 app.cors({
@@ -264,7 +264,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new App()
+app = new Zapp()
 
 # Custom 404 handler
 app.notFound(func(req, res)
@@ -285,7 +285,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new App()
+app = new Zapp()
 
 # Create a route group with prefix
 api = app.group("/api/v1")
@@ -309,7 +309,7 @@ app.run(3000)
 
 | Method | Description |
 |--------|-------------|
-| `new App()` | Create a new application instance |
+| `new Zapp()` | Create a new application instance |
 | `app.get(path, handler)` | Register GET route |
 | `app.post(path, handler)` | Register POST route |
 | `app.put(path, handler)` | Register PUT route |

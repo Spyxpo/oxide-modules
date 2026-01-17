@@ -5,7 +5,7 @@
 #  Usage:
 #    use zapi
 #
-#    app = new App()
+#    app = new Zapp()
 #    app.get("/", func(req, res)
 #        res.text("Hello, World!")
 #    endfunc)
@@ -431,10 +431,10 @@ class RouteGroup
 endclass
 
 # -----------------------------------------------------------------------------
-# App Class - Main Application
+# Zapp Class - Main Application
 # -----------------------------------------------------------------------------
 
-class App
+class Zapp
     func init()
         self.routes = []
         self.middlewares = []
@@ -934,4 +934,4 @@ func toHex(num)
     return hexChars[num / 16] + hexChars[num % 16]
 endfunc
 
-print "Zapi module loaded"
+print "Zapi module loaded (v0.0.1)"
