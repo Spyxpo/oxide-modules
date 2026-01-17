@@ -1,0 +1,42 @@
+{
+  "name": "zapi",
+  "version": "0.0.1",
+  "description": "Lightweight web framework for building APIs and web applications in Oxide. Simple, readable syntax inspired by Flask.",
+  "author": "Oxide Team",
+  "license": "MIT",
+  "repository": "https://github.com/Spyxpo/oxide-modules/tree/stable/zapi",
+  "homepage": "https://oxide-lang.dev/modules/zapi",
+  "tags": ["web", "api", "http", "server", "rest", "framework"],
+  "category": "networking",
+  "keywords": ["web", "api", "http", "server", "rest", "framework", "microframework", "backend"],
+  "platforms": {
+    "macos": {
+      "supported": true,
+      "minVersion": "10.13",
+      "dependencies": []
+    },
+    "windows": {
+      "supported": true,
+      "minVersion": "10",
+      "dependencies": []
+    },
+    "linux": {
+      "supported": true,
+      "dependencies": []
+    },
+    "ios": {
+      "supported": false
+    },
+    "android": {
+      "supported": false
+    },
+    "web": {
+      "supported": false
+    }
+  },
+  "main": "src/zapi.ox",
+  "native": false,
+  "ffi": {
+    "enabled": false
+  }
+}

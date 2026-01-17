@@ -1,10 +1,10 @@
 {
   "name": "webview",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Cross-platform native webview module for Oxide. Embed web content in desktop applications.",
   "author": "Oxide Team",
   "license": "MIT",
-  "repository": "https://github.com/aspect-apps/oxide",
+  "repository": "https://github.com/Spyxpo/oxide-modules/tree/stable/webview",
   "homepage": "https://oxide-lang.dev/modules/webview",
   "tags": ["webview", "gui", "browser", "html", "web", "ui"],
   "category": "ui",
