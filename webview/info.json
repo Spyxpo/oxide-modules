@@ -1,0 +1,60 @@
+{
+  "name": "webview",
+  "version": "0.0.1",
+  "description": "Cross-platform native webview module for Oxide. Embed web content in desktop applications.",
+  "author": "Oxide Team",
+  "license": "MIT",
+  "repository": "https://github.com/aspect-apps/oxide",
+  "homepage": "https://oxide-lang.dev/modules/webview",
+  "tags": ["webview", "gui", "browser", "html", "web", "ui"],
+  "category": "ui",
+  "keywords": ["webview", "browser", "gui", "html", "desktop", "native"],
+  "platforms": {
+    "macos": {
+      "supported": true,
+      "minVersion": "10.13",
+      "dependencies": [],
+      "frameworks": ["WebKit"]
+    },
+    "windows": {
+      "supported": true,
+      "minVersion": "10",
+      "dependencies": ["WebView2"]
+    },
+    "linux": {
+      "supported": true,
+      "dependencies": ["gtk+-3.0", "webkit2gtk-4.0"]
+    },
+    "ios": {
+      "supported": false
+    },
+    "android": {
+      "supported": false
+    },
+    "web": {
+      "supported": false
+    }
+  },
+  "main": "src/webview.ox",
+  "native": true,
+  "ffi": {
+    "enabled": true,
+    "libraries": {
+      "macos": "liboxide_webview.dylib",
+      "linux": "liboxide_webview.so",
+      "windows": "oxide_webview.dll"
+    },
+    "pluginClass": {
+      "macos": {
+        "name": "OxideWebviewPlugin",
+        "header": "oxide_webview.h"
+      },
+      "linux": {
+        "name": "OxideWebviewPlugin"
+      },
+      "windows": {
+        "name": "OxideWebviewPlugin"
+      }
+    }
+  }
+}
