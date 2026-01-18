@@ -347,6 +347,22 @@ app.run(3000)
 | `res.header(name, value)` | Set response header |
 | `res.cookie(name, value, opts)` | Set cookie |
 
+### ZapiUtils Class (Static Utility Methods)
+
+| Static Method | Description |
+|---------------|-------------|
+| `ZapiUtils.urlDecode(str)` | URL decode a string |
+| `ZapiUtils.urlEncode(str)` | URL encode a string |
+| `ZapiUtils.jsonEncode(data)` | Encode data to JSON string |
+| `ZapiUtils.jsonDecode(str)` | Decode JSON string to data |
+| `ZapiUtils.escapeJsonString(str)` | Escape special characters in JSON |
+| `ZapiUtils.startsWith(str, prefix)` | Check if string starts with prefix |
+| `ZapiUtils.endsWith(str, suffix)` | Check if string ends with suffix |
+| `ZapiUtils.contains(str, substr)` | Check if string contains substring |
+| `ZapiUtils.toHex(num)` | Convert number to hex string |
+
+Module-level convenience functions (`urlDecode()`, `urlEncode()`, etc.) are also available and delegate to these static methods.
+
 ## Comparison with Flask
 
 | Flask | Zapi |

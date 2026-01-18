@@ -675,120 +675,159 @@ class Webview
         endif
         return False
     endfunc
+
+    # -------------------------------------------------------------------------
+    # Static Methods (called as Webview.methodName())
+    # -------------------------------------------------------------------------
+
+    # Quick function to open a URL in a webview
+    static func openUrl(url, title, width, height)
+        if title == None
+            title = "Webview"
+        endif
+        if width == None
+            width = 800
+        endif
+        if height == None
+            height = 600
+        endif
+        create(title, width, height)
+        navigate(url)
+        run()
+    endfunc
+
+    # Quick function to display HTML content
+    static func openHtml(html, title, width, height)
+        if title == None
+            title = "Webview"
+        endif
+        if width == None
+            width = 800
+        endif
+        if height == None
+            height = 600
+        endif
+        create(title, width, height)
+        loadHtml(html)
+        run()
+    endfunc
+
+    # Create a simple dialog with HTML content
+    static func dialog(html, title, width, height)
+        if title == None
+            title = "Dialog"
+        endif
+        if width == None
+            width = 400
+        endif
+        if height == None
+            height = 300
+        endif
+        create(title, width, height)
+        setResizable(0)
+        center()
+        loadHtml(html)
+        run()
+    endfunc
+
+    # Create an alert dialog
+    static func alert(message, title)
+        if title == None
+            title = "Alert"
+        endif
+        html = "<!DOCTYPE html><html><head><style>"
+        html = html + "body{font-family:system-ui,-apple-system,sans-serif;padding:20px;text-align:center;}"
+        html = html + "p{margin:20px 0;font-size:14px;color:#333;}"
+        html = html + "button{padding:8px 24px;font-size:14px;cursor:pointer;border:none;"
+        html = html + "background:#007AFF;color:white;border-radius:6px;}"
+        html = html + "button:hover{background:#0056b3;}"
+        html = html + "</style></head><body>"
+        html = html + "<p>" + str(message) + "</p>"
+        html = html + "<button onclick='window.close()'>OK</button>"
+        html = html + "</body></html>"
+        Webview.dialog(html, title, 350, 180)
+    endfunc
+
+    # Create a confirm dialog (returns True/False)
+    static func confirm(message, title)
+        if title == None
+            title = "Confirm"
+        endif
+        html = "<!DOCTYPE html><html><head><style>"
+        html = html + "body{font-family:system-ui,-apple-system,sans-serif;padding:20px;text-align:center;}"
+        html = html + "p{margin:20px 0;font-size:14px;color:#333;}"
+        html = html + ".buttons{display:flex;gap:10px;justify-content:center;}"
+        html = html + "button{padding:8px 24px;font-size:14px;cursor:pointer;border:none;border-radius:6px;}"
+        html = html + ".ok{background:#007AFF;color:white;}"
+        html = html + ".cancel{background:#e0e0e0;color:#333;}"
+        html = html + "</style></head><body>"
+        html = html + "<p>" + str(message) + "</p>"
+        html = html + "<div class='buttons'>"
+        html = html + "<button class='cancel' onclick='window.oxideResult=false;window.close()'>Cancel</button>"
+        html = html + "<button class='ok' onclick='window.oxideResult=true;window.close()'>OK</button>"
+        html = html + "</div></body></html>"
+        Webview.dialog(html, title, 350, 180)
+        # Note: In a real implementation, we'd need to capture the result
+        return True
+    endfunc
+
+    # Create a webview with common settings for desktop apps
+    static func createApp(title, width, height, url)
+        wv = new Webview(title, width, height)
+        wv.open()
+        wv.enableDevTools()
+        if url != None
+            wv.load(url)
+        endif
+        return wv
+    endfunc
+
+    # Create a frameless/transparent webview
+    static func createTransparent(title, width, height)
+        wv = new Webview(title, width, height)
+        wv.open()
+        setBackgroundColor(0, 0, 0, 0)
+        return wv
+    endfunc
 endclass
 
 # -----------------------------------------------------------------------------
-# Convenience Functions
+# Module Functions (Convenience wrappers that delegate to class static methods)
 # -----------------------------------------------------------------------------
 
 # Quick function to open a URL in a webview
 func openUrl(url, title, width, height)
-    if title == None
-        title = "Webview"
-    endif
-    if width == None
-        width = 800
-    endif
-    if height == None
-        height = 600
-    endif
-    create(title, width, height)
-    navigate(url)
-    run()
+    Webview.openUrl(url, title, width, height)
 endfunc
 
 # Quick function to display HTML content
 func openHtml(html, title, width, height)
-    if title == None
-        title = "Webview"
-    endif
-    if width == None
-        width = 800
-    endif
-    if height == None
-        height = 600
-    endif
-    create(title, width, height)
-    loadHtml(html)
-    run()
+    Webview.openHtml(html, title, width, height)
 endfunc
 
 # Create a simple dialog with HTML content
 func dialog(html, title, width, height)
-    if title == None
-        title = "Dialog"
-    endif
-    if width == None
-        width = 400
-    endif
-    if height == None
-        height = 300
-    endif
-    create(title, width, height)
-    setResizable(0)
-    center()
-    loadHtml(html)
-    run()
+    Webview.dialog(html, title, width, height)
 endfunc
 
 # Create an alert dialog
 func alert(message, title)
-    if title == None
-        title = "Alert"
-    endif
-    html = "<!DOCTYPE html><html><head><style>"
-    html = html + "body{font-family:system-ui,-apple-system,sans-serif;padding:20px;text-align:center;}"
-    html = html + "p{margin:20px 0;font-size:14px;color:#333;}"
-    html = html + "button{padding:8px 24px;font-size:14px;cursor:pointer;border:none;"
-    html = html + "background:#007AFF;color:white;border-radius:6px;}"
-    html = html + "button:hover{background:#0056b3;}"
-    html = html + "</style></head><body>"
-    html = html + "<p>" + str(message) + "</p>"
-    html = html + "<button onclick='window.close()'>OK</button>"
-    html = html + "</body></html>"
-    dialog(html, title, 350, 180)
+    Webview.alert(message, title)
 endfunc
 
 # Create a confirm dialog (returns True/False)
 func confirm(message, title)
-    if title == None
-        title = "Confirm"
-    endif
-    html = "<!DOCTYPE html><html><head><style>"
-    html = html + "body{font-family:system-ui,-apple-system,sans-serif;padding:20px;text-align:center;}"
-    html = html + "p{margin:20px 0;font-size:14px;color:#333;}"
-    html = html + ".buttons{display:flex;gap:10px;justify-content:center;}"
-    html = html + "button{padding:8px 24px;font-size:14px;cursor:pointer;border:none;border-radius:6px;}"
-    html = html + ".ok{background:#007AFF;color:white;}"
-    html = html + ".cancel{background:#e0e0e0;color:#333;}"
-    html = html + "</style></head><body>"
-    html = html + "<p>" + str(message) + "</p>"
-    html = html + "<div class='buttons'>"
-    html = html + "<button class='cancel' onclick='window.oxideResult=false;window.close()'>Cancel</button>"
-    html = html + "<button class='ok' onclick='window.oxideResult=true;window.close()'>OK</button>"
-    html = html + "</div></body></html>"
-    dialog(html, title, 350, 180)
-    # Note: In a real implementation, we'd need to capture the result
-    return True
+    return Webview.confirm(message, title)
 endfunc
 
 # Create a webview with common settings for desktop apps
 func createApp(title, width, height, url)
-    wv = new Webview(title, width, height)
-    wv.open()
-    wv.enableDevTools()
-    if url != None
-        wv.load(url)
-    endif
-    return wv
+    return Webview.createApp(title, width, height, url)
 endfunc
 
 # Create a frameless/transparent webview
 func createTransparent(title, width, height)
-    wv = new Webview(title, width, height)
-    wv.open()
-    setBackgroundColor(0, 0, 0, 0)
-    return wv
+    return Webview.createTransparent(title, width, height)
 endfunc
 
-print "Webview module loaded (v0.0.1)"
+print "Webview module loaded (v0.0.2)"

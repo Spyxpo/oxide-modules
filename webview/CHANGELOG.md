@@ -2,6 +2,18 @@
 
 All notable changes to the Webview module will be documented in this file.
 
+## [0.0.2] - 2025-01-18
+
+### Changed
+
+- Refactored to class-based OOP pattern with static methods
+- Added static methods to `Webview` class: `Webview.openUrl()`, `Webview.openHtml()`, `Webview.dialog()`, `Webview.alert()`, `Webview.confirm()`, `Webview.createApp()`, `Webview.createTransparent()`
+- Module-level convenience functions now delegate to class static methods for consistent API
+
+### Documentation
+
+- Updated version to 0.0.2
+
 ## [0.0.1] - 2025-01-17
 
 ### Added

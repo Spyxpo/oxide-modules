@@ -1,6 +1,6 @@
 {
   "name": "zapi",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Lightweight web framework for building APIs and web applications in Oxide. Simple, readable syntax inspired by Flask.",
   "author": "Oxide Team",
   "license": "MIT",

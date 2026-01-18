@@ -1024,4 +1024,4 @@ func _lastIndexOf(str, substr)
     return lastPos
 endfunc
 
-print "DateTime module loaded (v0.0.1)"
+print "DateTime module loaded (v0.0.2)"

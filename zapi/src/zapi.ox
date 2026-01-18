@@ -801,137 +801,188 @@ class Zapp
 endclass
 
 # -----------------------------------------------------------------------------
-# Helper Functions
+# ZapiUtils Class - Utility functions as static methods
+# -----------------------------------------------------------------------------
+
+class ZapiUtils
+    # URL decode a string
+    static func urlDecode(str)
+        result = ""
+        i = 0
+        while i < len(str)
+            c = str[i]
+            if c == "+"
+                result = result + " "
+            elif c == "%" and i + 2 < len(str)
+                hex = slice(str, i + 1, i + 3)
+                charCode = parseInt(hex, 16)
+                result = result + chr(charCode)
+                i = i + 2
+            else
+                result = result + c
+            endif
+            i = i + 1
+        endwhile
+        return result
+    endfunc
+
+    # URL encode a string
+    static func urlEncode(str)
+        result = ""
+        for c in str
+            code = ord(c)
+            if (code >= 65 and code <= 90) or (code >= 97 and code <= 122) or (code >= 48 and code <= 57) or c == "-" or c == "_" or c == "." or c == "~"
+                result = result + c
+            elif c == " "
+                result = result + "+"
+            else
+                result = result + "%" + ZapiUtils.toHex(code)
+            endif
+        endfor
+        return result
+    endfunc
+
+    # JSON encode helper (if not built-in)
+    static func jsonEncode(data)
+        if type(data) == "string"
+            return "\"" + ZapiUtils.escapeJsonString(data) + "\""
+        endif
+        if type(data) == "number"
+            return str(data)
+        endif
+        if type(data) == "boolean"
+            if data
+                return "true"
+            else
+                return "false"
+            endif
+        endif
+        if data == None
+            return "null"
+        endif
+        if type(data) == "list"
+            items = []
+            for item in data
+                append(items, ZapiUtils.jsonEncode(item))
+            endfor
+            return "[" + join(items, ", ") + "]"
+        endif
+        if type(data) == "dict"
+            pairs = []
+            for key in keys(data)
+                pair = "\"" + ZapiUtils.escapeJsonString(str(key)) + "\": " + ZapiUtils.jsonEncode(data[key])
+                append(pairs, pair)
+            endfor
+            return "{" + join(pairs, ", ") + "}"
+        endif
+        return "null"
+    endfunc
+
+    # Escape JSON string
+    static func escapeJsonString(str)
+        result = ""
+        for c in str
+            if c == "\""
+                result = result + "\\\""
+            elif c == "\\"
+                result = result + "\\\\"
+            elif c == "\n"
+                result = result + "\\n"
+            elif c == "\r"
+                result = result + "\\r"
+            elif c == "\t"
+                result = result + "\\t"
+            else
+                result = result + c
+            endif
+        endfor
+        return result
+    endfunc
+
+    # JSON decode helper (if not built-in)
+    static func jsonDecode(str)
+        # Use built-in JSON parsing if available
+        return parseJson(str)
+    endfunc
+
+    # Check if string starts with prefix
+    static func startsWith(str, prefix)
+        if len(str) < len(prefix)
+            return False
+        endif
+        return slice(str, 0, len(prefix)) == prefix
+    endfunc
+
+    # Check if string ends with suffix
+    static func endsWith(str, suffix)
+        if len(str) < len(suffix)
+            return False
+        endif
+        return slice(str, len(str) - len(suffix), len(str)) == suffix
+    endfunc
+
+    # Check if string contains substring
+    static func contains(str, substr)
+        return indexOf(str, substr) >= 0
+    endfunc
+
+    # Convert to hex string
+    static func toHex(num)
+        hexChars = "0123456789ABCDEF"
+        if num < 16
+            return "0" + hexChars[num]
+        endif
+        return hexChars[num / 16] + hexChars[num % 16]
+    endfunc
+endclass
+
+# -----------------------------------------------------------------------------
+# Module Functions (Convenience wrappers that delegate to class static methods)
 # -----------------------------------------------------------------------------
 
 # URL decode a string
 func urlDecode(str)
-    result = ""
-    i = 0
-    while i < len(str)
-        c = str[i]
-        if c == "+"
-            result = result + " "
-        elif c == "%" and i + 2 < len(str)
-            hex = slice(str, i + 1, i + 3)
-            charCode = parseInt(hex, 16)
-            result = result + chr(charCode)
-            i = i + 2
-        else
-            result = result + c
-        endif
-        i = i + 1
-    endwhile
-    return result
+    return ZapiUtils.urlDecode(str)
 endfunc
 
 # URL encode a string
 func urlEncode(str)
-    result = ""
-    for c in str
-        code = ord(c)
-        if (code >= 65 and code <= 90) or (code >= 97 and code <= 122) or (code >= 48 and code <= 57) or c == "-" or c == "_" or c == "." or c == "~"
-            result = result + c
-        elif c == " "
-            result = result + "+"
-        else
-            result = result + "%" + toHex(code)
-        endif
-    endfor
-    return result
+    return ZapiUtils.urlEncode(str)
 endfunc
 
 # JSON encode helper (if not built-in)
 func jsonEncode(data)
-    if type(data) == "string"
-        return "\"" + escapeJsonString(data) + "\""
-    endif
-    if type(data) == "number"
-        return str(data)
-    endif
-    if type(data) == "boolean"
-        if data
-            return "true"
-        else
-            return "false"
-        endif
-    endif
-    if data == None
-        return "null"
-    endif
-    if type(data) == "list"
-        items = []
-        for item in data
-            append(items, jsonEncode(item))
-        endfor
-        return "[" + join(items, ", ") + "]"
-    endif
-    if type(data) == "dict"
-        pairs = []
-        for key in keys(data)
-            pair = "\"" + escapeJsonString(str(key)) + "\": " + jsonEncode(data[key])
-            append(pairs, pair)
-        endfor
-        return "{" + join(pairs, ", ") + "}"
-    endif
-    return "null"
+    return ZapiUtils.jsonEncode(data)
 endfunc
 
 # Escape JSON string
 func escapeJsonString(str)
-    result = ""
-    for c in str
-        if c == "\""
-            result = result + "\\\""
-        elif c == "\\"
-            result = result + "\\\\"
-        elif c == "\n"
-            result = result + "\\n"
-        elif c == "\r"
-            result = result + "\\r"
-        elif c == "\t"
-            result = result + "\\t"
-        else
-            result = result + c
-        endif
-    endfor
-    return result
+    return ZapiUtils.escapeJsonString(str)
 endfunc
 
 # JSON decode helper (if not built-in)
 func jsonDecode(str)
-    # Use built-in JSON parsing if available
-    return parseJson(str)
+    return ZapiUtils.jsonDecode(str)
 endfunc
 
 # Check if string starts with prefix
 func startsWith(str, prefix)
-    if len(str) < len(prefix)
-        return False
-    endif
-    return slice(str, 0, len(prefix)) == prefix
+    return ZapiUtils.startsWith(str, prefix)
 endfunc
 
 # Check if string ends with suffix
 func endsWith(str, suffix)
-    if len(str) < len(suffix)
-        return False
-    endif
-    return slice(str, len(str) - len(suffix), len(str)) == suffix
+    return ZapiUtils.endsWith(str, suffix)
 endfunc
 
 # Check if string contains substring
 func contains(str, substr)
-    return indexOf(str, substr) >= 0
+    return ZapiUtils.contains(str, substr)
 endfunc
 
 # Convert to hex string
 func toHex(num)
-    hexChars = "0123456789ABCDEF"
-    if num < 16
-        return "0" + hexChars[num]
-    endif
-    return hexChars[num / 16] + hexChars[num % 16]
+    return ZapiUtils.toHex(num)
 endfunc
 
-print "Zapi module loaded (v0.0.1)"
+print "Zapi module loaded (v0.0.2)"

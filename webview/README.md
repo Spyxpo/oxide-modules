@@ -190,12 +190,17 @@ run()
 | `setUserAgent(userAgent)` | Set custom user agent |
 | `setBackgroundColor(r, g, b, a)` | Set background color (0-255) |
 
-### Convenience Functions
+### Convenience Functions (Module-level and Static Methods)
 
-| Function | Description |
-|----------|-------------|
-| `openUrl(url, title, w, h)` | Quick function to open URL |
-| `openHtml(html, title, w, h)` | Quick function to display HTML |
+| Function / Static Method | Description |
+|--------------------------|-------------|
+| `openUrl(url, title, w, h)` / `Webview.openUrl(...)` | Quick function to open URL |
+| `openHtml(html, title, w, h)` / `Webview.openHtml(...)` | Quick function to display HTML |
+| `dialog(html, title, w, h)` / `Webview.dialog(...)` | Create a dialog with HTML content |
+| `alert(message, title)` / `Webview.alert(...)` | Create an alert dialog |
+| `confirm(message, title)` / `Webview.confirm(...)` | Create a confirm dialog |
+| `createApp(title, w, h, url)` / `Webview.createApp(...)` | Create webview with common app settings |
+| `createTransparent(title, w, h)` / `Webview.createTransparent(...)` | Create frameless/transparent webview |
 
 ### Webview Class
 

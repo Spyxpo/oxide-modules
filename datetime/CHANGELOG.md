@@ -2,6 +2,18 @@
 
 All notable changes to the Datetime module will be documented in this file.
 
+## [0.0.2] - 2025-01-18
+
+### Changed
+
+- Module already follows class-based OOP patterns with `DateTime` and `Duration` classes
+- Static methods available via `DateTime.now()`, `DateTime.utcNow()`, `DateTime.parse()`, etc.
+- Module-level convenience functions delegate to class static methods for consistent API
+
+### Documentation
+
+- Updated version to 0.0.2
+
 ## [0.0.1] - 2025-01-17
 
 ### Added
