@@ -17,8 +17,8 @@ oxide install zapi
 ```oxide
 use zapi
 
-# Create a new app
-app = new Zapp()
+# Create a new app using OOP pattern
+app = Zapp.create()
 
 # Define routes using simple method calls
 app.get("/", func(req, res)
@@ -41,7 +41,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new Zapp()
+app = Zapp.create()
 
 # GET request
 app.get("/hello", func(req, res)
@@ -67,12 +67,30 @@ endfunc)
 app.run(8080)
 ```
 
+### Using Factory Methods
+
+```oxide
+use zapi
+
+# Create a basic API server on specific port
+app = Zapp.createApi(8080, "127.0.0.1")
+
+# Or create with CORS enabled
+app = Zapp.createWithCors("*")
+
+app.get("/api/data", func(req, res)
+    res.json({"data": "accessible from any origin"})
+endfunc)
+
+app.run(3000)
+```
+
 ### Route Parameters
 
 ```oxide
 use zapi
 
-app = new Zapp()
+app = Zapp.create()
 
 # Single parameter
 app.get("/users/:id", func(req, res)
@@ -94,7 +112,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new Zapp()
+app = Zapp.create()
 
 # Access query parameters
 # URL: /search?q=oxide&limit=10
@@ -112,7 +130,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new Zapp()
+app = Zapp.create()
 
 # Receive JSON body
 app.post("/api/data", func(req, res)
@@ -133,7 +151,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new Zapp()
+app = Zapp.create()
 
 app.get("/", func(req, res)
     html = "
@@ -157,7 +175,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new Zapp()
+app = Zapp.create()
 
 app.get("/old-page", func(req, res)
     res.redirect("/new-page")
@@ -175,7 +193,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new Zapp()
+app = Zapp.create()
 
 app.get("/not-found", func(req, res)
     res.status(404).text("Page not found")
@@ -197,7 +215,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new Zapp()
+app = Zapp.create()
 
 # Global middleware - runs for all routes
 app.use(func(req, res, next)
@@ -227,7 +245,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new Zapp()
+app = Zapp.create()
 
 # Serve static files from a directory
 app.static("/public", "./static")
@@ -243,7 +261,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new Zapp()
+app = Zapp.create()
 
 # Enable CORS for all routes
 app.cors({
@@ -264,7 +282,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new Zapp()
+app = Zapp.create()
 
 # Custom 404 handler
 app.notFound(func(req, res)
@@ -285,7 +303,7 @@ app.run(3000)
 ```oxide
 use zapi
 
-app = new Zapp()
+app = Zapp.create()
 
 # Create a route group with prefix
 api = app.group("/api/v1")
@@ -305,11 +323,18 @@ app.run(3000)
 
 ## API Reference
 
-### App Class
+### Zapp Class - Static Methods
+
+| Static Method | Description |
+|---------------|-------------|
+| `Zapp.create()` | Create a new Zapp instance |
+| `Zapp.createApi(port, host)` | Create app with port and host configured |
+| `Zapp.createWithCors(origin)` | Create app with CORS enabled |
+
+### Zapp Class - Instance Methods
 
 | Method | Description |
 |--------|-------------|
-| `new Zapp()` | Create a new application instance |
 | `app.get(path, handler)` | Register GET route |
 | `app.post(path, handler)` | Register POST route |
 | `app.put(path, handler)` | Register PUT route |
@@ -347,7 +372,7 @@ app.run(3000)
 | `res.header(name, value)` | Set response header |
 | `res.cookie(name, value, opts)` | Set cookie |
 
-### ZapiUtils Class (Static Utility Methods)
+### ZapiUtils Class - Static Utility Methods
 
 | Static Method | Description |
 |---------------|-------------|
@@ -361,12 +386,11 @@ app.run(3000)
 | `ZapiUtils.contains(str, substr)` | Check if string contains substring |
 | `ZapiUtils.toHex(num)` | Convert number to hex string |
 
-Module-level convenience functions (`urlDecode()`, `urlEncode()`, etc.) are also available and delegate to these static methods.
-
 ## Comparison with Flask
 
 | Flask | Zapi |
 |-------|------|
+| `app = Flask(__name__)` | `app = Zapp.create()` |
 | `@app.route("/", methods=["GET"])` | `app.get("/", handler)` |
 | `@app.route("/users/<id>")` | `app.get("/users/:id", handler)` |
 | `request.args.get("q")` | `req.query["q"]` |
@@ -376,6 +400,7 @@ Module-level convenience functions (`urlDecode()`, `urlEncode()`, etc.) are also
 
 ## Why Zapi?
 
+- **OOP Pattern**: Use `Zapp.create()` for clean, class-based API
 - **No decorators**: Routes are registered with simple method calls
 - **Readable syntax**: Code reads like plain English
 - **Familiar patterns**: Similar concepts to Flask/Express

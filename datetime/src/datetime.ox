@@ -9,7 +9,8 @@
 #
 #  Usage:
 #    use datetime
-#    dt = now()
+#
+#    dt = DateTime.now()
 #    print dt.format("%Y-%m-%d %H:%M:%S")
 # =============================================================================
 
@@ -685,6 +686,11 @@ class DateTime
     # Static Methods (called as DateTime.methodName())
     # -------------------------------------------------------------------------
 
+    # Create a new DateTime instance (factory method)
+    static func create(year, month, day, hour, minute, second, millisecond)
+        return new DateTime(year, month, day, hour, minute, second, millisecond)
+    endfunc
+
     # Get current local datetime
     static func now()
         return new DateTime()
@@ -1024,4 +1030,4 @@ func _lastIndexOf(str, substr)
     return lastPos
 endfunc
 
-print "DateTime module loaded (v0.0.2)"
+print "DateTime module loaded (v0.0.1)"

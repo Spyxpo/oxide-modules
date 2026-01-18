@@ -5,7 +5,7 @@
 #  Usage:
 #    use zapi
 #
-#    app = new Zapp()
+#    app = Zapp.create()
 #    app.get("/", func(req, res)
 #        res.text("Hello, World!")
 #    endfunc)
@@ -445,6 +445,41 @@ class Zapp
         self.port = 3000
         self.host = "127.0.0.1"
     endfunc
+
+    # -------------------------------------------------------------------------
+    # Static Methods (called as Zapp.methodName())
+    # -------------------------------------------------------------------------
+
+    # Create a new Zapp instance
+    static func create()
+        return new Zapp()
+    endfunc
+
+    # Create and configure a basic API server
+    static func createApi(port, host)
+        app = new Zapp()
+        if port != None
+            app.port = port
+        endif
+        if host != None
+            app.host = host
+        endif
+        return app
+    endfunc
+
+    # Create app with CORS enabled
+    static func createWithCors(origin)
+        app = new Zapp()
+        if origin == None
+            origin = "*"
+        endif
+        app.cors({"origin": origin})
+        return app
+    endfunc
+
+    # -------------------------------------------------------------------------
+    # Instance Methods
+    # -------------------------------------------------------------------------
 
     # Register GET route
     func get(path, handler)
@@ -985,4 +1020,4 @@ func toHex(num)
     return ZapiUtils.toHex(num)
 endfunc
 
-print "Zapi module loaded (v0.0.2)"
+print "Zapi module loaded (v0.0.1)"

@@ -1,6 +1,6 @@
 {
   "name": "datetime",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "description": "Cross-platform date and time module for Oxide. Parse, format, and manipulate dates and times with ease.",
   "author": "Oxide Team",
   "license": "MIT",

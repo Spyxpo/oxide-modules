@@ -1,6 +1,6 @@
 {
   "name": "webview",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "description": "Cross-platform native webview module for Oxide. Embed web content in desktop applications.",
   "author": "Oxide Team",
   "license": "MIT",

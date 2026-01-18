@@ -14,9 +14,10 @@
 #
 #  Usage:
 #    use webview
-#    create("My App", 800, 600)
-#    navigate("https://example.com")
-#    run()
+#
+#    wv = Webview.create("My App", 800, 600)
+#    wv.load("https://example.com")
+#    wv.start()
 # =============================================================================
 
 # Link the native webview library
@@ -344,6 +345,35 @@ class Webview
         self._devToolsEnabled = False
         self._zoomLevel = 1.0
     endfunc
+
+    # -------------------------------------------------------------------------
+    # Static Factory Methods (called as Webview.methodName())
+    # -------------------------------------------------------------------------
+
+    # Create a new Webview instance
+    static func create(title, width, height)
+        wv = new Webview(title, width, height)
+        wv.open()
+        return wv
+    endfunc
+
+    # Create webview and navigate to URL
+    static func createWithUrl(url, title, width, height)
+        wv = Webview.create(title, width, height)
+        wv.load(url)
+        return wv
+    endfunc
+
+    # Create webview with HTML content
+    static func createWithHtml(html, title, width, height)
+        wv = Webview.create(title, width, height)
+        wv.loadContent(html, None)
+        return wv
+    endfunc
+
+    # -------------------------------------------------------------------------
+    # Instance Methods
+    # -------------------------------------------------------------------------
 
     # Create and show the window
     func open()
@@ -830,4 +860,4 @@ func createTransparent(title, width, height)
     return Webview.createTransparent(title, width, height)
 endfunc
 
-print "Webview module loaded (v0.0.2)"
+print "Webview module loaded (v0.0.1)"

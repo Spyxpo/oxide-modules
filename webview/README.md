@@ -42,21 +42,28 @@ sudo pacman -S gtk3 webkit2gtk
 - Windows 10 or later
 - WebView2 Runtime (automatically installed with Edge)
 
-## Usage
+## Quick Start
+
+```oxide
+use webview
+
+# Create a webview using OOP pattern
+wv = Webview.create("My App", 800, 600)
+wv.load("https://example.com")
+wv.start()
+```
+
+## Usage Examples
 
 ### Basic Example
 
 ```oxide
 use webview
 
-# Create a webview window
-create("My App", 800, 600)
-
-# Navigate to a URL
-navigate("https://example.com")
-
-# Run the event loop (blocking)
-run()
+# Create and show webview
+wv = Webview.create("My App", 800, 600)
+wv.load("https://example.com")
+wv.start()
 ```
 
 ### Load HTML Content
@@ -66,20 +73,21 @@ use webview
 
 html = "<html><body><h1>Hello from Oxide!</h1></body></html>"
 
-create("HTML Demo", 640, 480)
-loadHtml(html)
-run()
+wv = Webview.createWithHtml(html, "HTML Demo", 640, 480)
+wv.start()
 ```
 
-### Object-Oriented Usage
+### Using Factory Methods
 
 ```oxide
 use webview
 
-# Create webview instance
-wv = new Webview("My Browser", 1024, 768)
-wv.open()
-wv.load("https://oxide-lang.dev")
+# Create with URL directly
+wv = Webview.createWithUrl("https://oxide-lang.dev", "Browser", 1024, 768)
+wv.start()
+
+# Create with HTML content
+wv = Webview.createWithHtml("<h1>Hello!</h1>", "Demo", 400, 300)
 wv.start()
 ```
 
@@ -88,16 +96,13 @@ wv.start()
 ```oxide
 use webview
 
-create("JS Demo", 800, 600)
-loadHtml("<html><body><div id='result'></div></body></html>")
+wv = Webview.create("JS Demo", 800, 600)
+wv.loadContent("<html><body><div id='result'></div></body></html>", None)
 
 # Execute JavaScript
-eval("document.getElementById('result').innerHTML = 'Updated from Oxide!'")
+wv.executeJs("document.getElementById('result').innerHTML = 'Updated from Oxide!'")
 
-# Inject JavaScript to run on every page load
-inject("console.log('Page loaded!')")
-
-run()
+wv.start()
 ```
 
 ### Window Control
@@ -105,19 +110,16 @@ run()
 ```oxide
 use webview
 
-create("Resizable App", 800, 600)
-navigate("https://example.com")
+wv = Webview.create("Resizable App", 800, 600)
+wv.load("https://example.com")
 
 # Window customization
-setTitle("New Title")
-setSize(1024, 768)
-setResizable(1)
-setFullscreen(0)
+wv.setWindowTitle("New Title")
+wv.resize(1024, 768)
+wv.centerWindow()
+wv.enableDevTools()
 
-# Developer tools (macOS 13.3+, Linux)
-setDevTools(1)
-
-run()
+wv.start()
 ```
 
 ### Navigation Control
@@ -125,25 +127,109 @@ run()
 ```oxide
 use webview
 
-create("Browser", 1024, 768)
-navigate("https://example.com")
+wv = Webview.create("Browser", 1024, 768)
+wv.load("https://example.com")
 
-# Navigation functions
-goBack()
-goForward()
-reload()
-stop()
+# Navigation methods (chainable)
+wv.back()
+wv.forward()
+wv.refresh()
+wv.stopLoading()
 
 # Get current state
-url = getUrl()
-title = getTitle()
+url = wv.getCurrentUrl()
+title = wv.getCurrentTitle()
 
-run()
+wv.start()
+```
+
+### Static Convenience Methods
+
+```oxide
+use webview
+
+# Quick way to open a URL
+Webview.openUrl("https://oxide-lang.dev", "Browser", 800, 600)
+
+# Quick way to show HTML
+Webview.openHtml("<h1>Hello!</h1>", "Demo", 400, 300)
+
+# Show an alert dialog
+Webview.alert("Operation completed!", "Success")
+
+# Show a confirm dialog
+Webview.confirm("Are you sure?", "Confirm")
+
+# Create a dialog
+Webview.dialog("<p>Custom content</p>", "Dialog", 350, 200)
 ```
 
 ## API Reference
 
-### Core Functions
+### Webview Class - Static Factory Methods
+
+| Static Method | Description |
+|---------------|-------------|
+| `Webview.create(title, w, h)` | Create a new Webview instance |
+| `Webview.createWithUrl(url, title, w, h)` | Create webview and navigate to URL |
+| `Webview.createWithHtml(html, title, w, h)` | Create webview with HTML content |
+
+### Webview Class - Static Convenience Methods
+
+| Static Method | Description |
+|---------------|-------------|
+| `Webview.openUrl(url, title, w, h)` | Quick function to open URL |
+| `Webview.openHtml(html, title, w, h)` | Quick function to display HTML |
+| `Webview.dialog(html, title, w, h)` | Create a dialog with HTML content |
+| `Webview.alert(message, title)` | Create an alert dialog |
+| `Webview.confirm(message, title)` | Create a confirm dialog |
+| `Webview.createApp(title, w, h, url)` | Create webview with common app settings |
+| `Webview.createTransparent(title, w, h)` | Create frameless/transparent webview |
+
+### Webview Class - Instance Methods
+
+| Method | Description |
+|--------|-------------|
+| `wv.open()` | Create and show window |
+| `wv.load(url)` | Navigate to URL |
+| `wv.loadContent(html, baseUrl)` | Load HTML content |
+| `wv.start()` | Run event loop |
+| `wv.close()` | Destroy webview |
+| `wv.resize(w, h)` | Resize window |
+| `wv.setWindowTitle(title)` | Set window title |
+| `wv.executeJs(js)` | Execute JavaScript |
+| `wv.executeJsAsync(js)` | Execute JavaScript asynchronously |
+| `wv.back()` | Go back |
+| `wv.forward()` | Go forward |
+| `wv.refresh()` | Reload page |
+| `wv.stopLoading()` | Stop loading |
+| `wv.centerWindow()` | Center window on screen |
+| `wv.moveTo(x, y)` | Move window to position |
+| `wv.minimizeWindow()` | Minimize window |
+| `wv.maximizeWindow()` | Maximize window |
+| `wv.restoreWindow()` | Restore window |
+| `wv.fullscreen(enabled)` | Toggle fullscreen |
+| `wv.show()` | Show window |
+| `wv.hide()` | Hide window |
+| `wv.enableDevTools()` | Enable developer tools |
+| `wv.disableDevTools()` | Disable developer tools |
+| `wv.showDevTools()` | Open developer tools |
+| `wv.hideDevTools()` | Close developer tools |
+| `wv.zoomIn()` | Increase zoom |
+| `wv.zoomOut()` | Decrease zoom |
+| `wv.resetZoom()` | Reset zoom to 100% |
+| `wv.getCurrentUrl()` | Get current URL |
+| `wv.getCurrentTitle()` | Get page title |
+| `wv.isPageLoading()` | Check if page is loading |
+| `wv.getProgress()` | Get loading progress |
+| `wv.canNavigateBack()` | Check if can go back |
+| `wv.canNavigateForward()` | Check if can go forward |
+| `wv.takeScreenshot(path)` | Save screenshot to file |
+| `wv.saveAsPdf(path)` | Save page as PDF |
+| `wv.print()` | Print the page |
+| `wv.clearBrowsingData()` | Clear all browsing data |
+
+### Native Functions (Low-level)
 
 | Function | Description |
 |----------|-------------|
@@ -152,71 +238,22 @@ run()
 | `loadHtml(html)` | Load HTML content directly |
 | `run()` | Run the event loop (blocking) |
 | `destroy()` | Destroy the webview and free resources |
-
-### Window Control
-
-| Function | Description |
-|----------|-------------|
 | `setTitle(title)` | Set the window title |
 | `setSize(width, height)` | Set window dimensions |
 | `setResizable(resizable)` | Enable/disable window resizing (1/0) |
 | `setVisible(visible)` | Show/hide the window (1/0) |
 | `setFullscreen(fullscreen)` | Toggle fullscreen mode (1/0) |
-
-### JavaScript Interaction
-
-| Function | Description |
-|----------|-------------|
 | `eval(js)` | Execute JavaScript and return result |
 | `inject(js)` | Inject JS to run on every page load |
-| `bind(name)` | Bind a function name for JS-to-Oxide calls |
-
-### Navigation
-
-| Function | Description |
-|----------|-------------|
 | `goBack()` | Navigate back in history |
 | `goForward()` | Navigate forward in history |
 | `reload()` | Reload current page |
 | `stop()` | Stop loading |
 | `getUrl()` | Get current URL |
 | `getTitle()` | Get page title |
-
-### Configuration
-
-| Function | Description |
-|----------|-------------|
 | `setDevTools(enabled)` | Enable/disable developer tools |
 | `setUserAgent(userAgent)` | Set custom user agent |
 | `setBackgroundColor(r, g, b, a)` | Set background color (0-255) |
-
-### Convenience Functions (Module-level and Static Methods)
-
-| Function / Static Method | Description |
-|--------------------------|-------------|
-| `openUrl(url, title, w, h)` / `Webview.openUrl(...)` | Quick function to open URL |
-| `openHtml(html, title, w, h)` / `Webview.openHtml(...)` | Quick function to display HTML |
-| `dialog(html, title, w, h)` / `Webview.dialog(...)` | Create a dialog with HTML content |
-| `alert(message, title)` / `Webview.alert(...)` | Create an alert dialog |
-| `confirm(message, title)` / `Webview.confirm(...)` | Create a confirm dialog |
-| `createApp(title, w, h, url)` / `Webview.createApp(...)` | Create webview with common app settings |
-| `createTransparent(title, w, h)` / `Webview.createTransparent(...)` | Create frameless/transparent webview |
-
-### Webview Class
-
-```oxide
-wv = new Webview(title, width, height)
-wv.open()              # Create and show window
-wv.load(url)           # Navigate to URL
-wv.loadContent(html)   # Load HTML content
-wv.start()             # Run event loop
-wv.close()             # Destroy webview
-wv.resize(w, h)        # Resize window
-wv.executeJs(js)       # Execute JavaScript
-wv.back()              # Go back
-wv.forward()           # Go forward
-wv.refresh()           # Reload page
-```
 
 ## Building the Native Library
 
@@ -244,10 +281,10 @@ Requires WebView2 SDK. See Microsoft's WebView2 documentation.
 ```oxide
 use webview
 
-create("Simple Browser", 1280, 800)
-navigate("https://oxide-lang.dev")
-setDevTools(1)
-run()
+wv = Webview.create("Simple Browser", 1280, 800)
+wv.load("https://oxide-lang.dev")
+wv.enableDevTools()
+wv.start()
 ```
 
 ### Local HTML App
@@ -272,9 +309,8 @@ app_html = "
 </html>
 "
 
-create("Desktop App", 600, 400)
-loadHtml(app_html)
-run()
+wv = Webview.createWithHtml(app_html, "Desktop App", 600, 400)
+wv.start()
 ```
 
 ## License

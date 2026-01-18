@@ -55,8 +55,8 @@ print "Today: " + date.format("%Y-%m-%d")
 ```oxide
 use datetime
 
-# From components
-dt = new DateTime(2024, 12, 25, 10, 30, 0)
+# From components using factory method
+dt = DateTime.create(2024, 12, 25, 10, 30, 0, 0)
 print dt.format("%B %d, %Y")  # December 25, 2024
 
 # From timestamp (milliseconds)
@@ -192,9 +192,8 @@ print date1.equals(date2)     # False
 
 # Difference
 diff = date1.diff(date2)
-print diff.days               # -5
-print diff.hours              # -120
-print diff.totalSeconds       # -432000
+print diff.days()             # -5
+print diff.hours()            # -120
 
 # Between check
 middle = DateTime.parse("2024-01-17", "%Y-%m-%d")
@@ -243,9 +242,6 @@ local = dt.toLocal()
 # Get timezone info
 print dt.timezone()       # "America/New_York"
 print dt.utcOffset()      # -5 (hours)
-
-# Create with specific timezone
-dt = new DateTime(2024, 1, 17, 12, 0, 0, "Europe/London")
 ```
 
 ### Unix Timestamps
@@ -305,10 +301,11 @@ print dt.quarter()          # 1
 
 ## API Reference
 
-### DateTime Static Methods
+### DateTime Class - Static Methods
 
-| Method | Description |
-|--------|-------------|
+| Static Method | Description |
+|---------------|-------------|
+| `DateTime.create(y, m, d, h, min, s, ms)` | Create DateTime from components |
 | `DateTime.now()` | Current local datetime |
 | `DateTime.utcNow()` | Current UTC datetime |
 | `DateTime.today()` | Today at midnight |
@@ -322,20 +319,14 @@ print dt.quarter()          # 1
 | `DateTime.sleep(duration)` | Sleep for duration |
 | `DateTime.sleepSeconds(seconds)` | Sleep for seconds |
 
-### Duration Static Methods
+### Duration Class - Static Methods
 
-| Method | Description |
-|--------|-------------|
+| Static Method | Description |
+|---------------|-------------|
 | `Duration.fromComponents(days, hours, mins, secs, ms)` | Create duration from components |
 
-### DateTime Class
+### DateTime Instance Methods
 
-#### Constructor
-```oxide
-new DateTime(year, month, day, hour, minute, second, timezone)
-```
-
-#### Properties
 | Method | Description |
 |--------|-------------|
 | `year()` | Get year |
@@ -350,18 +341,10 @@ new DateTime(year, month, day, hour, minute, second, timezone)
 | `dayOfYear()` | Get day of year |
 | `weekOfYear()` | Get week number |
 | `quarter()` | Get quarter (1-4) |
-
-#### Formatting
-| Method | Description |
-|--------|-------------|
 | `format(pattern)` | Format to string |
 | `toIso()` | Format as ISO 8601 |
 | `toUnix()` | Get Unix timestamp |
 | `toTimestamp()` | Get timestamp (ms) |
-
-#### Arithmetic
-| Method | Description |
-|--------|-------------|
 | `addDays(n)` | Add/subtract days |
 | `addMonths(n)` | Add/subtract months |
 | `addYears(n)` | Add/subtract years |
@@ -369,42 +352,34 @@ new DateTime(year, month, day, hour, minute, second, timezone)
 | `addMinutes(n)` | Add/subtract minutes |
 | `addSeconds(n)` | Add/subtract seconds |
 | `add(duration)` | Add duration |
-
-#### Comparison
-| Method | Description |
-|--------|-------------|
 | `isBefore(other)` | Check if before |
 | `isAfter(other)` | Check if after |
 | `equals(other)` | Check if equal |
 | `diff(other)` | Get difference as Duration |
 | `isBetween(start, end)` | Check if between |
-
-#### Periods
-| Method | Description |
-|--------|-------------|
 | `startOfDay()` | Start of day (00:00:00) |
 | `endOfDay()` | End of day (23:59:59) |
 | `startOfMonth()` | First day of month |
 | `endOfMonth()` | Last day of month |
 | `startOfYear()` | First day of year |
-
-#### Timezone
-| Method | Description |
-|--------|-------------|
 | `toUtc()` | Convert to UTC |
 | `toLocal()` | Convert to local |
 | `timezone()` | Get timezone name |
 | `utcOffset()` | Get UTC offset (hours) |
+| `fromNow()` | Get relative time string |
+| `isLeapYear()` | Check if leap year |
+| `isWeekend()` | Check if weekend |
+| `isToday()` | Check if today |
 
-### Duration Class
+### Duration Instance Methods
 
 | Method | Description |
 |--------|-------------|
-| `days` | Total days |
-| `hours` | Total hours |
-| `minutes` | Total minutes |
-| `seconds` | Total seconds |
-| `milliseconds` | Total milliseconds |
+| `days()` | Total days |
+| `hours()` | Total hours |
+| `minutes()` | Total minutes |
+| `seconds()` | Total seconds |
+| `milliseconds()` | Total milliseconds |
 | `humanize()` | Human readable string |
 
 ### Format Constants
@@ -415,25 +390,27 @@ new DateTime(year, month, day, hour, minute, second, timezone)
 | `FORMAT_TIME` | `%H:%M:%S` |
 | `FORMAT_DATETIME` | `%Y-%m-%d %H:%M:%S` |
 | `FORMAT_ISO` | ISO 8601 |
-| `FORMAT_RFC2822` | RFC 2822 |
 
 ## Building the Native Library
 
 If you need to compile the native library yourself:
 
 ### macOS
+
 ```bash
 cd ~/.oxide/modules/datetime/src
 clang -shared -o ../liboxide_datetime.dylib oxide_datetime.c
 ```
 
 ### Linux
+
 ```bash
 cd ~/.oxide/modules/datetime/src
 gcc -shared -fPIC -o ../liboxide_datetime.so oxide_datetime.c
 ```
 
 ### Windows
+
 ```bash
 cl /LD oxide_datetime.c /Fe:oxide_datetime.dll
 ```
