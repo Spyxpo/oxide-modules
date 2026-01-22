@@ -1,0 +1,59 @@
+{
+  "name": "vision",
+  "version": "0.0.1",
+  "description": "Computer vision module for Oxide - webcam capture, image/video processing, and visual analysis",
+  "author": "Oxide Team",
+  "license": "MIT",
+  "repository": "https://github.com/Spyxpo/oxide-modules/tree/stable/vision",
+  "homepage": "https://oxide-lang.dev/modules/vision",
+  "tags": ["vision", "opencv", "webcam", "image", "video", "camera", "processing", "computer-vision"],
+  "category": "multimedia",
+  "keywords": ["vision", "opencv", "webcam", "camera", "image", "video", "capture", "processing", "detection", "filters"],
+  "main": "src/vision.ox",
+  "native": true,
+  "platforms": {
+    "macos": {
+      "supported": true,
+      "minVersion": "10.13",
+      "frameworks": ["AVFoundation", "CoreVideo", "CoreMedia", "Accelerate"],
+      "dependencies": ["opencv"]
+    },
+    "windows": {
+      "supported": true,
+      "minVersion": "10",
+      "dependencies": ["opencv"]
+    },
+    "linux": {
+      "supported": true,
+      "dependencies": ["opencv", "v4l2"]
+    },
+    "ios": {
+      "supported": false
+    },
+    "android": {
+      "supported": false
+    },
+    "web": {
+      "supported": false
+    }
+  },
+  "ffi": {
+    "enabled": true,
+    "libraries": {
+      "macos": "liboxide_vision.dylib",
+      "linux": "liboxide_vision.so",
+      "windows": "oxide_vision.dll"
+    },
+    "pluginClass": {
+      "macos": {
+        "name": "OxideVisionPlugin",
+        "header": "oxide_vision.h"
+      }
+    }
+  },
+  "build": {
+    "macos": "clang -shared -fPIC -o liboxide_vision.dylib src/oxide_vision.c $(pkg-config --cflags --libs opencv4) -framework AVFoundation -framework CoreVideo -framework CoreMedia",
+    "linux": "gcc -shared -fPIC -o liboxide_vision.so src/oxide_vision.c $(pkg-config --cflags --libs opencv4) -lv4l2",
+    "windows": "cl /LD /Fe:oxide_vision.dll src/oxide_vision.c /I\"C:\\opencv\\include\" /link /LIBPATH:\"C:\\opencv\\lib\" opencv_world4.lib"
+  }
+}
