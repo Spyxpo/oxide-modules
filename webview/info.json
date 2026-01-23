@@ -1,6 +1,6 @@
 {
   "name": "webview",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Cross-platform native webview module for Oxide. Embed web content in desktop applications.",
   "author": "Oxide Team",
   "license": "MIT",
@@ -56,5 +56,10 @@
         "name": "OxideWebviewPlugin"
       }
     }
+  },
+  "build": {
+    "macos": "clang -shared -fPIC -x objective-c -o src/liboxide_webview.dylib src/oxide_webview.c -framework WebKit -framework Cocoa",
+    "linux": "gcc -shared -fPIC -o src/liboxide_webview.so src/oxide_webview.c $(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0)",
+    "windows": "cl /LD src/oxide_webview.c /Fe:src/oxide_webview.dll"
   }
 }

@@ -2,6 +2,18 @@
 
 All notable changes to the Webview module will be documented in this file.
 
+## [0.0.2] - 2025-01-23
+
+### Fixed
+
+- Bug fixes and stability improvements
+
+### Improved
+
+- Minor refinements and enhancements
+
+---
+
 ## [0.0.1] - 2025-01-18
 
 ### Added
