@@ -21,7 +21,8 @@
 # =============================================================================
 
 # Link the native webview library
-link "./modules/webview/liboxide_webview.dylib"
+# The library is resolved relative to the module's src/ directory
+link "liboxide_webview"
 
 # -----------------------------------------------------------------------------
 # Core Webview Functions

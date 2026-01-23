@@ -52,7 +52,7 @@
     }
   },
   "build": {
-    "macos": "clang -shared -fPIC -o liboxide_vision.dylib src/oxide_vision.c $(pkg-config --cflags --libs opencv4) -framework AVFoundation -framework CoreVideo -framework CoreMedia",
+    "macos": "clang++ -shared -fPIC -std=c++11 -o liboxide_vision.dylib src/oxide_vision.c $(pkg-config --cflags --libs opencv4) -framework AVFoundation -framework CoreVideo -framework CoreMedia",
     "linux": "gcc -shared -fPIC -o liboxide_vision.so src/oxide_vision.c $(pkg-config --cflags --libs opencv4) -lv4l2",
     "windows": "cl /LD /Fe:oxide_vision.dll src/oxide_vision.c /I\"C:\\opencv\\include\" /link /LIBPATH:\"C:\\opencv\\lib\" opencv_world4.lib"
   }

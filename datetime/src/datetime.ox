@@ -15,7 +15,8 @@
 # =============================================================================
 
 # Link the native datetime library
-link "./modules/datetime/liboxide_datetime.dylib"
+# The library is resolved relative to the module's directory
+link "liboxide_datetime"
 
 # -----------------------------------------------------------------------------
 # Native FFI Functions

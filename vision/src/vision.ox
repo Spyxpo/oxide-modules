@@ -30,8 +30,9 @@
 # License: MIT
 # =============================================================================
 
-# Link the native library (platform-specific path resolved at runtime)
-link "./modules/vision/liboxide_vision.dylib"
+# Link the native library
+# The library is resolved relative to the module's directory
+link "liboxide_vision"
 
 # =============================================================================
 # Constants
