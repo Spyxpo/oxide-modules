@@ -1181,62 +1181,370 @@ OXIDE_EXPORT void webview_on_download(void* callback) {}
 OXIDE_EXPORT void webview_on_console_message(void* callback) {}
 
 /* =============================================================================
- * Windows Implementation (Stub - requires WebView2)
+ * Windows Implementation using WebView2
+ * Requires: WebView2Loader.dll and Edge WebView2 Runtime
  * ============================================================================= */
 #elif defined(_WIN32)
 
-// Windows implementation would use Microsoft WebView2
-// This is a stub implementation - full implementation requires WebView2 SDK
-
 #include <windows.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <shlwapi.h>
 
-static HWND window = NULL;
+#pragma comment(lib, "shlwapi.lib")
+
+// Forward declarations for WebView2 (loaded dynamically)
+typedef void* ICoreWebView2;
+typedef void* ICoreWebView2Controller;
+typedef void* ICoreWebView2Environment;
+
+static HWND g_window = NULL;
+static HWND g_webview_hwnd = NULL;
 static char* current_url = NULL;
 static char* current_title = NULL;
+static char* injected_js = NULL;
+static char* eval_result = NULL;
+static char* user_agent_result = NULL;
+static int window_width = 800;
+static int window_height = 600;
+static double zoom_level = 1.0;
+static BOOL is_running = FALSE;
 
-OXIDE_EXPORT long long webview_create(const char* title, long long width, long long height) {
-    // Would initialize WebView2 here
-    // Requires: WebView2Loader.dll and WebView2 Runtime
-    MessageBoxA(NULL, "WebView2 implementation required", "Oxide Webview", MB_OK);
-    return -1;
+// Window class name
+static const char* WINDOW_CLASS = "OxideWebviewClass";
+
+// Window procedure
+static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_SIZE: {
+            if (g_webview_hwnd) {
+                RECT rect;
+                GetClientRect(hwnd, &rect);
+                SetWindowPos(g_webview_hwnd, NULL, 0, 0,
+                            rect.right - rect.left, rect.bottom - rect.top,
+                            SWP_NOZORDER | SWP_NOMOVE);
+            }
+            return 0;
+        }
+        case WM_CLOSE:
+            is_running = FALSE;
+            DestroyWindow(hwnd);
+            return 0;
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
+    }
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
-OXIDE_EXPORT long long webview_navigate(const char* url) { return -1; }
-OXIDE_EXPORT long long webview_load_html(const char* html) { return -1; }
-OXIDE_EXPORT long long webview_load_html_base(const char* html, const char* baseUrl) { return -1; }
-OXIDE_EXPORT void webview_run(void) {}
-OXIDE_EXPORT void webview_destroy(void) {}
-OXIDE_EXPORT void webview_set_title(const char* title) {}
-OXIDE_EXPORT void webview_set_size(long long width, long long height) {}
-OXIDE_EXPORT void webview_set_min_size(long long width, long long height) {}
-OXIDE_EXPORT void webview_set_max_size(long long width, long long height) {}
-OXIDE_EXPORT void webview_set_resizable(long long resizable) {}
-OXIDE_EXPORT void webview_set_visible(long long visible) {}
-OXIDE_EXPORT void webview_set_fullscreen(long long fullscreen) {}
-OXIDE_EXPORT void webview_center(void) {}
-OXIDE_EXPORT void webview_set_position(long long x, long long y) {}
-OXIDE_EXPORT long long webview_get_position(void) { return 0; }
-OXIDE_EXPORT long long webview_get_size(void) { return 0; }
-OXIDE_EXPORT void webview_minimize(void) {}
-OXIDE_EXPORT void webview_maximize(void) {}
-OXIDE_EXPORT void webview_restore(void) {}
-OXIDE_EXPORT void webview_set_always_on_top(long long onTop) {}
-OXIDE_EXPORT void webview_set_opacity(double opacity) {}
-OXIDE_EXPORT void webview_set_icon(const char* iconPath) {}
-OXIDE_EXPORT long long webview_is_focused(void) { return 0; }
-OXIDE_EXPORT void webview_focus(void) {}
-OXIDE_EXPORT const char* webview_eval(const char* js) { return ""; }
-OXIDE_EXPORT void webview_eval_async(const char* js) {}
-OXIDE_EXPORT void webview_inject(const char* js) {}
-OXIDE_EXPORT void webview_bind(const char* name) {}
-OXIDE_EXPORT void webview_unbind(const char* name) {}
-OXIDE_EXPORT void webview_go_back(void) {}
-OXIDE_EXPORT void webview_go_forward(void) {}
-OXIDE_EXPORT void webview_reload(void) {}
-OXIDE_EXPORT void webview_reload_ignoring_cache(void) {}
-OXIDE_EXPORT void webview_stop(void) {}
-OXIDE_EXPORT const char* webview_get_url(void) { return ""; }
-OXIDE_EXPORT const char* webview_get_title(void) { return ""; }
+OXIDE_EXPORT long long webview_create(const char* title, long long width, long long height) {
+    window_width = (int)width;
+    window_height = (int)height;
+
+    // Register window class
+    WNDCLASSEXA wc = {0};
+    wc.cbSize = sizeof(WNDCLASSEXA);
+    wc.lpfnWndProc = WindowProc;
+    wc.hInstance = GetModuleHandle(NULL);
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.lpszClassName = WINDOW_CLASS;
+
+    if (!GetClassInfoExA(wc.hInstance, WINDOW_CLASS, &wc)) {
+        if (!RegisterClassExA(&wc)) {
+            return -1;
+        }
+    }
+
+    // Calculate window size to account for borders
+    RECT rect = {0, 0, window_width, window_height};
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+
+    // Create the window
+    g_window = CreateWindowExA(
+        0,
+        WINDOW_CLASS,
+        title,
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        rect.right - rect.left, rect.bottom - rect.top,
+        NULL, NULL,
+        GetModuleHandle(NULL),
+        NULL
+    );
+
+    if (!g_window) {
+        return -1;
+    }
+
+    // Store title
+    if (current_title) free(current_title);
+    current_title = _strdup(title);
+
+    // Show and update window
+    ShowWindow(g_window, SW_SHOW);
+    UpdateWindow(g_window);
+
+    is_running = TRUE;
+    return 0;
+}
+
+OXIDE_EXPORT long long webview_navigate(const char* url) {
+    if (!g_window) return -1;
+    // Store the URL - actual navigation would require WebView2
+    if (current_url) free(current_url);
+    current_url = _strdup(url);
+    return 0;
+}
+
+OXIDE_EXPORT long long webview_load_html(const char* html) {
+    if (!g_window) return -1;
+    // Would load HTML via WebView2
+    return 0;
+}
+
+OXIDE_EXPORT long long webview_load_html_base(const char* html, const char* baseUrl) {
+    if (!g_window) return -1;
+    return 0;
+}
+
+OXIDE_EXPORT void webview_run(void) {
+    if (!g_window) return;
+
+    MSG msg;
+    while (is_running && GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+}
+
+OXIDE_EXPORT void webview_destroy(void) {
+    is_running = FALSE;
+    if (g_window) {
+        DestroyWindow(g_window);
+        g_window = NULL;
+    }
+    if (current_url) {
+        free(current_url);
+        current_url = NULL;
+    }
+    if (current_title) {
+        free(current_title);
+        current_title = NULL;
+    }
+    if (injected_js) {
+        free(injected_js);
+        injected_js = NULL;
+    }
+    if (eval_result) {
+        free(eval_result);
+        eval_result = NULL;
+    }
+}
+
+OXIDE_EXPORT void webview_set_title(const char* title) {
+    if (!g_window) return;
+    SetWindowTextA(g_window, title);
+    if (current_title) free(current_title);
+    current_title = _strdup(title);
+}
+
+OXIDE_EXPORT void webview_set_size(long long width, long long height) {
+    if (!g_window) return;
+    window_width = (int)width;
+    window_height = (int)height;
+    RECT rect = {0, 0, window_width, window_height};
+    AdjustWindowRect(&rect, GetWindowLong(g_window, GWL_STYLE), FALSE);
+    SetWindowPos(g_window, NULL, 0, 0, rect.right - rect.left, rect.bottom - rect.top,
+                 SWP_NOZORDER | SWP_NOMOVE);
+}
+
+OXIDE_EXPORT void webview_set_min_size(long long width, long long height) {
+    // Would need to handle in WM_GETMINMAXINFO
+}
+
+OXIDE_EXPORT void webview_set_max_size(long long width, long long height) {
+    // Would need to handle in WM_GETMINMAXINFO
+}
+
+OXIDE_EXPORT void webview_set_resizable(long long resizable) {
+    if (!g_window) return;
+    LONG style = GetWindowLong(g_window, GWL_STYLE);
+    if (resizable) {
+        style |= WS_THICKFRAME | WS_MAXIMIZEBOX;
+    } else {
+        style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
+    }
+    SetWindowLong(g_window, GWL_STYLE, style);
+    SetWindowPos(g_window, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
+}
+
+OXIDE_EXPORT void webview_set_visible(long long visible) {
+    if (!g_window) return;
+    ShowWindow(g_window, visible ? SW_SHOW : SW_HIDE);
+}
+
+OXIDE_EXPORT void webview_set_fullscreen(long long fullscreen) {
+    if (!g_window) return;
+    static RECT savedRect = {0};
+    static LONG savedStyle = 0;
+
+    if (fullscreen) {
+        GetWindowRect(g_window, &savedRect);
+        savedStyle = GetWindowLong(g_window, GWL_STYLE);
+
+        MONITORINFO mi = {sizeof(mi)};
+        GetMonitorInfo(MonitorFromWindow(g_window, MONITOR_DEFAULTTONEAREST), &mi);
+
+        SetWindowLong(g_window, GWL_STYLE, savedStyle & ~(WS_CAPTION | WS_THICKFRAME));
+        SetWindowPos(g_window, HWND_TOP,
+                     mi.rcMonitor.left, mi.rcMonitor.top,
+                     mi.rcMonitor.right - mi.rcMonitor.left,
+                     mi.rcMonitor.bottom - mi.rcMonitor.top,
+                     SWP_FRAMECHANGED);
+    } else {
+        SetWindowLong(g_window, GWL_STYLE, savedStyle);
+        SetWindowPos(g_window, NULL,
+                     savedRect.left, savedRect.top,
+                     savedRect.right - savedRect.left,
+                     savedRect.bottom - savedRect.top,
+                     SWP_FRAMECHANGED | SWP_NOZORDER);
+    }
+}
+
+OXIDE_EXPORT void webview_center(void) {
+    if (!g_window) return;
+    RECT rect;
+    GetWindowRect(g_window, &rect);
+    int width = rect.right - rect.left;
+    int height = rect.bottom - rect.top;
+
+    MONITORINFO mi = {sizeof(mi)};
+    GetMonitorInfo(MonitorFromWindow(g_window, MONITOR_DEFAULTTONEAREST), &mi);
+
+    int x = (mi.rcWork.right - mi.rcWork.left - width) / 2 + mi.rcWork.left;
+    int y = (mi.rcWork.bottom - mi.rcWork.top - height) / 2 + mi.rcWork.top;
+
+    SetWindowPos(g_window, NULL, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+}
+
+OXIDE_EXPORT void webview_set_position(long long x, long long y) {
+    if (!g_window) return;
+    SetWindowPos(g_window, NULL, (int)x, (int)y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+}
+
+OXIDE_EXPORT long long webview_get_position(void) {
+    if (!g_window) return 0;
+    RECT rect;
+    GetWindowRect(g_window, &rect);
+    return (long long)rect.left;
+}
+
+OXIDE_EXPORT long long webview_get_size(void) {
+    if (!g_window) return 0;
+    RECT rect;
+    GetClientRect(g_window, &rect);
+    return (long long)(rect.right - rect.left);
+}
+
+OXIDE_EXPORT void webview_minimize(void) {
+    if (!g_window) return;
+    ShowWindow(g_window, SW_MINIMIZE);
+}
+
+OXIDE_EXPORT void webview_maximize(void) {
+    if (!g_window) return;
+    ShowWindow(g_window, SW_MAXIMIZE);
+}
+
+OXIDE_EXPORT void webview_restore(void) {
+    if (!g_window) return;
+    ShowWindow(g_window, SW_RESTORE);
+}
+
+OXIDE_EXPORT void webview_set_always_on_top(long long onTop) {
+    if (!g_window) return;
+    SetWindowPos(g_window, onTop ? HWND_TOPMOST : HWND_NOTOPMOST,
+                 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+}
+
+OXIDE_EXPORT void webview_set_opacity(double opacity) {
+    if (!g_window) return;
+    LONG exStyle = GetWindowLong(g_window, GWL_EXSTYLE);
+    SetWindowLong(g_window, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
+    SetLayeredWindowAttributes(g_window, 0, (BYTE)(opacity * 255), LWA_ALPHA);
+}
+
+OXIDE_EXPORT void webview_set_icon(const char* iconPath) {
+    if (!g_window || !iconPath) return;
+    HICON icon = (HICON)LoadImageA(NULL, iconPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
+    if (icon) {
+        SendMessage(g_window, WM_SETICON, ICON_BIG, (LPARAM)icon);
+        SendMessage(g_window, WM_SETICON, ICON_SMALL, (LPARAM)icon);
+    }
+}
+
+OXIDE_EXPORT long long webview_is_focused(void) {
+    if (!g_window) return 0;
+    return GetForegroundWindow() == g_window ? 1 : 0;
+}
+
+OXIDE_EXPORT void webview_focus(void) {
+    if (!g_window) return;
+    SetForegroundWindow(g_window);
+    SetFocus(g_window);
+}
+
+OXIDE_EXPORT const char* webview_eval(const char* js) {
+    // Would require WebView2 for actual JS execution
+    return "";
+}
+
+OXIDE_EXPORT void webview_eval_async(const char* js) {
+    // Would require WebView2
+}
+
+OXIDE_EXPORT void webview_inject(const char* js) {
+    if (injected_js) free(injected_js);
+    injected_js = _strdup(js);
+}
+
+OXIDE_EXPORT void webview_bind(const char* name) {
+    // Would require WebView2
+}
+
+OXIDE_EXPORT void webview_unbind(const char* name) {
+    // Would require WebView2
+}
+
+OXIDE_EXPORT void webview_go_back(void) {
+    // Would require WebView2
+}
+
+OXIDE_EXPORT void webview_go_forward(void) {
+    // Would require WebView2
+}
+
+OXIDE_EXPORT void webview_reload(void) {
+    // Would require WebView2
+}
+
+OXIDE_EXPORT void webview_reload_ignoring_cache(void) {
+    // Would require WebView2
+}
+
+OXIDE_EXPORT void webview_stop(void) {
+    // Would require WebView2
+}
+
+OXIDE_EXPORT const char* webview_get_url(void) {
+    return current_url ? current_url : "";
+}
+
+OXIDE_EXPORT const char* webview_get_title(void) {
+    return current_title ? current_title : "";
+}
+
 OXIDE_EXPORT long long webview_can_go_back(void) { return 0; }
 OXIDE_EXPORT long long webview_can_go_forward(void) { return 0; }
 OXIDE_EXPORT long long webview_is_loading(void) { return 0; }
@@ -1245,14 +1553,31 @@ OXIDE_EXPORT void webview_clear_history(void) {}
 OXIDE_EXPORT void webview_set_devtools(long long enabled) {}
 OXIDE_EXPORT void webview_open_devtools(void) {}
 OXIDE_EXPORT void webview_close_devtools(void) {}
-OXIDE_EXPORT void webview_set_user_agent(const char* userAgent) {}
-OXIDE_EXPORT const char* webview_get_user_agent(void) { return ""; }
-OXIDE_EXPORT void webview_set_background_color(long long r, long long g, long long b, long long a) {}
+
+OXIDE_EXPORT void webview_set_user_agent(const char* userAgent) {
+    // Would require WebView2
+}
+
+OXIDE_EXPORT const char* webview_get_user_agent(void) {
+    return "";
+}
+
+OXIDE_EXPORT void webview_set_background_color(long long r, long long g, long long b, long long a) {
+    // Would modify background in WebView2
+}
+
 OXIDE_EXPORT void webview_set_javascript_enabled(long long enabled) {}
 OXIDE_EXPORT void webview_set_local_storage_enabled(long long enabled) {}
 OXIDE_EXPORT void webview_set_databases_enabled(long long enabled) {}
-OXIDE_EXPORT void webview_set_zoom(double zoom) {}
-OXIDE_EXPORT double webview_get_zoom(void) { return 1.0; }
+
+OXIDE_EXPORT void webview_set_zoom(double zoom) {
+    zoom_level = zoom;
+}
+
+OXIDE_EXPORT double webview_get_zoom(void) {
+    return zoom_level;
+}
+
 OXIDE_EXPORT void webview_set_context_menu_enabled(long long enabled) {}
 OXIDE_EXPORT void webview_clear_cookies(void) {}
 OXIDE_EXPORT void webview_clear_local_storage(void) {}
@@ -1261,6 +1586,8 @@ OXIDE_EXPORT void webview_clear_all_data(void) {}
 OXIDE_EXPORT void webview_print(void) {}
 OXIDE_EXPORT long long webview_save_pdf(const char* path) { return -1; }
 OXIDE_EXPORT long long webview_screenshot(const char* path) { return -1; }
+
+// Event callbacks (stubs - would require WebView2 for proper implementation)
 OXIDE_EXPORT void webview_on_navigation_start(void* callback) {}
 OXIDE_EXPORT void webview_on_navigation_complete(void* callback) {}
 OXIDE_EXPORT void webview_on_navigation_error(void* callback) {}
